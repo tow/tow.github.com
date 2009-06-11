@@ -4,27 +4,27 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>EADDRINUSE: {{ page.title }}</title>
+    <title>{{ page.title }}</title>
     <meta name="author" content="Toby White" />
-    <meta name="description" content="Toby White" />
 
     <link rel="stylesheet" href="/css/blueprint/screen.css" type="text/css" media="screen, projection">
     <link rel="stylesheet" href="/css/blueprint/print.css" type="text/css" media="print">
     <!--[if IE]><link rel="stylesheet" href="/css/blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
 
-
-    <link rel="openid.server" href="http://uszla.me.uk/id">
-    <link rel="openid.delegate" href="http://uszla.me.uk/id">
   </head>
   <body>
     <div class="container">
       <div id="header" class="span-24 last">
-        <img src="/imgs/EADDRINUSE.png" width="800" alt="EADDRINUSE" />
+        <h1><a href="{{ page.url }}"{{ page.title }}</a></h1>
+        Published {{ page.date | date_to_string }}
       </div>
       <hr />
       <div id="content" class="span-17 colborder">
         {{ content }}
       </div> 
+      <div id="rightsidebar" class="span-7 last">
+        sidebar
+      </div>
       <hr />
       <div>
         Toby White<br />
