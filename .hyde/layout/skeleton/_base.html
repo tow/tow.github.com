@@ -1,22 +1,23 @@
-
+{% extends "skeleton/_root.html" %}
+{% block all %}
 <!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>EADDRINUSE : Archives </title>
+    <title>{% block title %}EADDRINUSE: {{ page.title }}{% endblock %}</title>
     <meta name="author" content="Toby White" />
     <meta name="description" content="Toby White" />
-    
+    {% block css %}
     <link rel="stylesheet" href="/media/css/blueprint/screen.css" type="text/css" media="screen, projection">
     <link rel="stylesheet" href="/media/css/blueprint/print.css" type="text/css" media="print">
     <!--[if IE]><link rel="stylesheet" href="/media/css/blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
     <link rel="stylesheet" href="/media/css/pygments.css" type="text/css" media="screen, projection">
     <link rel="stylesheet" href="/media/css/base.css" type="text/css" media="screen, projection">
     <link rel="stylesheet" href="/media/css/eaddrinuse.css" type="text/css" media="screen, projection">
-    
-    
+    {% block extracss %}{% endblock %}{% endblock %}
+    {% block js %}
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
-    
+    {% block extra_js %}{% endblock %}{% endblock %}
 
     <link rel="openid.server" href="http://uszla.me.uk/id">
     <link rel="openid.delegate" href="http://uszla.me.uk/id">
@@ -29,68 +30,7 @@
         </center>
       </div>
       <div id="content" class="span-24 last">
-        
-
-<ul class="breadcrumbs">
-
-    <li>
-        <a href="/index.html">Eaddrinuse</a>
-        
-        <span class="separator">&gt;</span>
-    </li>
-
-    <li>
-        <a href="/blog/blog.html">Blog</a>
-        
-        <span class="separator">&gt;</span>
-    </li>
-
-    <li>
-        <a href="/blog/2009/2009.html">2009</a>
-        
-    </li>
-
-</ul>
-    
-
-
-
-<div id="sitenav">
-    <ul>
-        <li>
-            <a href="/index.html">Home</a>
-        </li>    
-        
-        <li>
-            <a href="/about/about.html">
-                About
-            </a>
-        </li>
-        
-        <li class="selected" >
-            <a href="/blog/blog.html">
-                Blog
-            </a>
-        </li>
-        
-        <hr />
-    </ul>
-</div>
-
-
-
-<div class="page-listing">
-
-
-<ul><li><span>2009-11-24  </span><a href="/blog/2009/setting-up-postfix.html">
-        
-            Postfix on Leopard.
-        </a></li></ul>
-
-
-</div>
-<div class="clear"></div>
-
+        {% block content %}{% endblock %}
       </div>
       <hr />
       <div>
@@ -101,3 +41,4 @@
     </div>
   </body>
 </html>
+{% endblock %}

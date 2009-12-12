@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>EADDRINUSE : Postfix on Leopard. </title>
+    <meta name="author" content="Toby White" />
+    <meta name="description" content="Toby White" />
+    
+    <link rel="stylesheet" href="/media/css/blueprint/screen.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/media/css/blueprint/print.css" type="text/css" media="print">
+    <!--[if IE]><link rel="stylesheet" href="/media/css/blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+    <link rel="stylesheet" href="/media/css/pygments.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/media/css/base.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/media/css/eaddrinuse.css" type="text/css" media="screen, projection">
+    
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
+    
+
+    <link rel="openid.server" href="http://uszla.me.uk/id">
+    <link rel="openid.delegate" href="http://uszla.me.uk/id">
+  </head>
+  <body>
+    <div class="container">
+      <div id="header" class="span-24 last">
+        <center>
+          <img src="/media/imgs/EADDRINUSE.png" width="600" alt="EADDRINUSE" />
+        </center>
+      </div>
+      <div id="content" class="span-24 last">
+        
+
+<ul class="breadcrumbs">
+
+    <li>
+        <a href="/index.html">Eaddrinuse</a>
+        
+        <span class="separator">&gt;</span>
+    </li>
+
+    <li>
+        <a href="/blog/blog.html">Blog</a>
+        
+        <span class="separator">&gt;</span>
+    </li>
+
+    <li>
+        <a href="/blog/2009/2009.html">2009</a>
+        
+    </li>
+
+</ul>
+    
+
+
+
+<div id="sitenav">
+    <ul>
+        <li>
+            <a href="/index.html">Home</a>
+        </li>    
+        
+        <li>
+            <a href="/about/about.html">
+                About
+            </a>
+        </li>
+        
+        <li class="selected" >
+            <a href="/blog/blog.html">
+                Blog
+            </a>
+        </li>
+        
+        <hr />
+    </ul>
+</div>
+
+
+<div id="content-header">
+    <h1>Postfix on Leopard.</h1>
+    <span class="post-date">Tue 24 Nov 2009</span>
+</div>
+
+
+<div id="post-content">
+
+
+<!-- Hyde::Article::Begin -->
+
+<p>I recently re-installed Leopard on my shiny new MacBook Pro. I use it primarily for development, and at least one of the projects I&#8217;m developing needs to send mail. So I wanted to get postfix&nbsp;working.</p>
+<p><span class="dquo">&#8220;</span>Working&#8221; means accepting mail from localhost, and sending mail via an <span class="caps">SMTP</span> server somewhere. The most obviously accessible <span class="caps">SMTP</span> server is gmail, of&nbsp;course.</p>
+<p>There&#8217;s a few places here <span class="amp">&amp;</span> there which tell you bits about how to get the Max <span class="caps">OS</span> X postfix working against gmail, but nothing comprehensive. And too many of them involved editing fragile config&nbsp;files.</p>
+<p>However, after some poking and prodding, this below seems to do the trick; and all with fairly obviously-reversible&nbsp;commands.</p>
+<p><tt>$MAIL_DOMAIN</tt> should be some domain you&#8217;re entitled to send mail for; in my case, this was simply &#8220;eaddrinu.se&#8221;. Set <tt>GMAIL_USERNAME</tt> and <tt>GMAIL_PASSWORD</tt> as&nbsp;appropriate.</p>
+
+<div class="highlight"><pre>sudo sh -c <span class="s2">&quot;</span>
+<span class="s2">launchctl unload /System/Library/LaunchDaemons/org.postfix.master.plist</span>
+<span class="s2">defaults write /System/Library/LaunchDaemons/org.postfix.master OnDemand -bool false</span>
+<span class="s2">postconf -e myhostname=$<span class="caps">MAILNAME</span></span>
+<span class="s2">postconf -e relayhost=smtp.gmail.com:587</span>
+<span class="s2">echo smtp.gmail.com:587 $GMAIL_USERNAME@gmail.com:$GMAIL_PASSWORD &gt;&gt; /etc/postfix/sasl_passwd</span>
+<span class="s2">postconf -e smtp_sasl_password_maps=hash:/etc/postfix/sasl_passwd</span>
+<span class="s2">postmap /etc/postfix/sasl_passwd</span>
+<span class="s2">postconf -e smtp_sasl_auth_enable=yes</span>
+<span class="s2">postconf -e smtp_use_tls=yes</span>
+<span class="s2">postconf -e smtp_tls_security_level=encrypt</span>
+<span class="s2">postconf -e smtp_sasl_security_options=</span>
+<span class="s2">postconf -e tls_random_source=dev:/dev/urandom</span>
+<span class="s2">defaults write /System/Library/LaunchDaemons/org.postfix.master RunAtLoad -bool true</span>
+<span class="s2">launchctl load /System/Library/LaunchDaemons/org.postfix.master.plist</span>
+<span class="s2">&quot;</span>
+</pre></div>
+
+
+<!-- Hyde::Article::End -->
+
+
+
+</div>
+
+      </div>
+      <hr />
+      <div>
+        Toby White<br />
+        toby@timetric.com<br />
+        <a href="http://twitter.com/tow21/">@tow21</a><br />
+      </div>
+    </div>
+  </body>
+</html>

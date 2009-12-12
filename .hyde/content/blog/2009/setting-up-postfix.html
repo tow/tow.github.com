@@ -1,0 +1,43 @@
+{% extends "_post.html" %}
+{%hyde
+    title: Postfix on Leopard.
+    created: 2009-11-24 23:03:37
+%}
+
+{% block article %}
+{% article %}
+{% asciidoc %}
+
+I recently re-installed Leopard on my shiny new MacBook Pro. I use it primarily for development, and at least one of the projects I'm developing needs to send mail. So I wanted to get postfix working.
+
+"Working" means accepting mail from localhost, and sending mail via an SMTP server somewhere. The most obviously accessible SMTP server is gmail, of course.
+
+There's a few places here & there which tell you bits about how to get the Max OS X postfix working against gmail, but nothing comprehensive. And too many of them involved editing fragile config files.
+
+However, after some poking and prodding, this below seems to do the trick; and all with fairly obviously-reversible commands.
+
+`$MAIL_DOMAIN` should be some domain you're entitled to send mail for; in my case, this was simply "eaddrinu.se". Set `GMAIL_USERNAME` and `GMAIL_PASSWORD` as appropriate.
+
+{% endasciidoc %}
+{% syntax bash %}
+sudo sh -c "
+launchctl unload /System/Library/LaunchDaemons/org.postfix.master.plist
+defaults write /System/Library/LaunchDaemons/org.postfix.master OnDemand -bool false
+postconf -e myhostname=$MAILNAME
+postconf -e relayhost=smtp.gmail.com:587
+echo smtp.gmail.com:587 $GMAIL_USERNAME@gmail.com:$GMAIL_PASSWORD >> /etc/postfix/sasl_passwd
+postconf -e smtp_sasl_password_maps=hash:/etc/postfix/sasl_passwd
+postmap /etc/postfix/sasl_passwd
+postconf -e smtp_sasl_auth_enable=yes
+postconf -e smtp_use_tls=yes
+postconf -e smtp_tls_security_level=encrypt
+postconf -e smtp_sasl_security_options=
+postconf -e tls_random_source=dev:/dev/urandom
+defaults write /System/Library/LaunchDaemons/org.postfix.master RunAtLoad -bool true
+launchctl load /System/Library/LaunchDaemons/org.postfix.master.plist
+"
+{% endsyntax %}
+
+{% endarticle %}
+
+{% endblock %}

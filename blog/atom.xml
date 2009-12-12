@@ -1,80 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>EADDRINUSE blog</title><link href="http://eaddrinu.se/blog/atom.xml" rel="self"/><link href="http://eaddrinu.se"/><updated>2009-11-24T22:49:05Z</updated><id>http://eaddrinu.se</id><entry><title>Merry Christmas</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2007/happy-christmas.html"/><updated>2000-01-01T00:00:00Z</updated><published>2007-12-20T18:20:30Z</published><id>http://eaddrinu.se/blog/2007/happy-christmas.html</id><content type="html"></content></entry><entry><title>Happy New Year</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2008/happy-new-year.html"/><updated>2000-01-01T00:00:00Z</updated><published>2008-12-31T18:21:15Z</published><id>http://eaddrinu.se/blog/2008/happy-new-year.html</id><content type="html">
+<feed xmlns="http://www.w3.org/2005/Atom"><title>EADDRINUSE blog</title><link href="http://eaddrinu.se/blog/atom.xml" rel="self"/><link href="http://eaddrinu.se"/><updated>2009-12-12T00:20:19Z</updated><id>http://eaddrinu.se</id><entry><title>Postfix on Leopard.</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2009/setting-up-postfix.html"/><updated>2000-01-01T00:00:00Z</updated><published>2009-11-24T23:03:37Z</published><id>http://eaddrinu.se/blog/2009/setting-up-postfix.html</id><content type="html">
        
-&lt;!-- Hyde::Excerpt::Begin --&gt;
+&lt;p&gt;I recently re-installed Leopard on my shiny new MacBook Pro. I use it primarily for development, and at least one of the projects I&amp;#8217;m developing needs to send mail. So I wanted to get postfix&amp;nbsp;working.&lt;/p&gt;
+&lt;p&gt;&lt;span class=&quot;dquo&quot;&gt;&amp;#8220;&lt;/span&gt;Working&amp;#8221; means accepting mail from localhost, and sending mail via an &lt;span class=&quot;caps&quot;&gt;SMTP&lt;/span&gt; server somewhere. The most obviously accessible &lt;span class=&quot;caps&quot;&gt;SMTP&lt;/span&gt; server is gmail, of&amp;nbsp;course.&lt;/p&gt;
+&lt;p&gt;There&amp;#8217;s a few places here &lt;span class=&quot;amp&quot;&gt;&amp;amp;&lt;/span&gt; there which tell you bits about how to get the Max &lt;span class=&quot;caps&quot;&gt;OS&lt;/span&gt; X postfix working against gmail, but nothing comprehensive. And too many of them involved editing fragile config&amp;nbsp;files.&lt;/p&gt;
+&lt;p&gt;However, after some poking and prodding, this below seems to do the trick; and all with fairly obviously-reversible&amp;nbsp;commands.&lt;/p&gt;
+&lt;p&gt;&lt;tt&gt;$MAIL_DOMAIN&lt;/tt&gt; should be some domain you&amp;#8217;re entitled to send mail for; in my case, this was simply &amp;#8220;eaddrinu.se&amp;#8221;. Set &lt;tt&gt;GMAIL_USERNAME&lt;/tt&gt; and &lt;tt&gt;GMAIL_PASSWORD&lt;/tt&gt; as&amp;nbsp;appropriate.&lt;/p&gt;
 
-&lt;h3&gt;ducimus minima ex delectus perferendis fugiat maiores dicta expedita&amp;nbsp;deleniti&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;sudo sh -c &lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;launchctl unload /System/Library/LaunchDaemons/org.postfix.master.plist&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;defaults write /System/Library/LaunchDaemons/org.postfix.master OnDemand -bool false&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e myhostname=$&lt;span class=&quot;caps&quot;&gt;MAILNAME&lt;/span&gt;&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e relayhost=smtp.gmail.com:587&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;echo smtp.gmail.com:587 $GMAIL_USERNAME@gmail.com:$GMAIL_PASSWORD &amp;gt;&amp;gt; /etc/postfix/sasl_passwd&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e smtp_sasl_password_maps=hash:/etc/postfix/sasl_passwd&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postmap /etc/postfix/sasl_passwd&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e smtp_sasl_auth_enable=yes&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e smtp_use_tls=yes&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e smtp_tls_security_level=encrypt&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e smtp_sasl_security_options=&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;postconf -e tls_random_source=dev:/dev/urandom&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;defaults write /System/Library/LaunchDaemons/org.postfix.master RunAtLoad -bool true&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;launchctl load /System/Library/LaunchDaemons/org.postfix.master.plist&lt;/span&gt;
+&lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;Architecto minus nemo accusamus nobis blanditiis quisquam commodi vero iste itaque, sequi laboriosam distinctio doloremque officia nihil itaque porro obcaecati, commodi pariatur omnis nisi minus non illo blanditiis libero molestiae, quae modi dolore adipisci vero corrupti nam quis amet, vitae omnis at ab totam ullam suscipit quos eveniet blanditiis? Iste pariatur error molestiae blanditiis nemo, ad accusantium labore illum esse qui magni nam non modi odit numquam, veniam assumenda facere molestiae ex omnis quam harum et. Vitae sequi autem optio eveniet voluptatibus quo officiis dolorem maxime voluptates amet, nihil et omnis repellendus rem nemo iste perferendis ex non quaerat, reiciendis quasi expedita, provident fuga neque&amp;nbsp;tempora.&lt;/p&gt;
-
-&lt;p&gt;Id minima quibusdam accusantium recusandae sunt voluptatibus quae accusamus incidunt, ipsa odio architecto magni dolore corrupti veniam blanditiis accusamus, magni dolore hic quaerat. Facere a deserunt aperiam nemo enim illo veniam nobis minima accusamus, non optio consequatur recusandae mollitia expedita unde nam quod dolorem earum, pariatur aut molestias hic voluptatum debitis numquam tempora, dolor in molestias ullam quos, quas reprehenderit eos omnis impedit&amp;nbsp;neque.&lt;/p&gt;
-
-&lt;!-- Hyde::Excerpt::End --&gt;
-
-&lt;h3&gt;aperiam nobis explicabo molestiae&amp;nbsp;corrupti&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Cupiditate voluptatum est eligendi, numquam quam amet totam doloremque harum quaerat facilis illum, delectus rem laudantium aspernatur voluptatem numquam est? Accusamus repellendus recusandae reprehenderit similique eaque, aliquam consequatur nobis quod sunt impedit&amp;nbsp;fugit.&lt;/p&gt;
-
-&lt;h3&gt;hic&amp;nbsp;beatae&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Totam voluptate corrupti vel temporibus ad magnam, quod possimus esse pariatur illum. Est labore velit sint, repellat rem nisi vitae doloremque quibusdam, corporis ex non fugiat nisi illo ipsum excepturi fuga saepe ad impedit, rem voluptatem distinctio fugiat repellendus culpa aliquid vero nihil, qui quis maxime? Sunt corporis culpa hic nihil facilis pariatur praesentium, iste atque dolore deserunt odit minus amet&amp;nbsp;animi?&lt;/p&gt;
-
-&lt;p&gt;Fugiat dolore iusto nostrum provident praesentium, totam sequi consequatur dolor fugit placeat neque explicabo reiciendis illum laboriosam libero? Nihil a ea consequuntur libero aliquid provident dolores accusantium doloremque, earum magnam&amp;nbsp;voluptatibus.&lt;/p&gt;
-
-
-   </content></entry><entry><title>Merry Christmas</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2008/happy-christmas.html"/><updated>2000-01-01T00:00:00Z</updated><published>2008-12-20T18:20:30Z</published><id>http://eaddrinu.se/blog/2008/happy-christmas.html</id><content type="html">
-       
-&lt;!-- Hyde::Excerpt::Begin --&gt;
-
-&lt;h3&gt;molestiae omnis iste ab atque doloribus autem enim nobis&amp;nbsp;sapiente&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Eaque ipsa voluptatem saepe doloribus, necessitatibus quibusdam repudiandae, nostrum placeat magnam, doloremque distinctio et recusandae provident nobis sed iste labore reiciendis unde libero, accusantium iste vitae fuga rerum dolores repellat quo expedita illo? Quos ullam laborum adipisci repellat quaerat voluptatem accusantium magnam, consectetur possimus ducimus alias tempore, corrupti modi dicta, cumque nisi voluptatem illo ad libero vitae optio possimus, aut eum&amp;nbsp;harum?&lt;/p&gt;
-
-&lt;p&gt;Beatae cum perferendis assumenda animi, quidem magnam dolorem, adipisci quia aliquam consequatur eveniet, obcaecati neque quia eius exercitationem porro officiis ut. Vel consequuntur ab harum unde? Aliquam dignissimos in facere officia fugit optio, cum voluptate nisi quos consequuntur quisquam minus natus laudantium nam blanditiis facilis, cumque dolores aut magni molestias fuga unde, reiciendis est perspiciatis vel fuga quam corporis consequatur dolorem autem saepe debitis, earum aliquid ullam debitis cum minus enim ab&amp;nbsp;quam.&lt;/p&gt;
-
-&lt;!-- Hyde::Excerpt::End --&gt;
-
-&lt;h3&gt;sint quis inventore voluptates&amp;nbsp;aliquid&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Ex omnis nam animi eaque accusantium, sapiente quis aliquam quo laborum tenetur beatae dolores placeat molestiae vero, voluptas in obcaecati repellat fuga eum libero optio, vitae officiis sint dolores, delectus quidem beatae&amp;nbsp;eum?&lt;/p&gt;
-
-&lt;h3&gt;eos&amp;nbsp;inventore&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Facilis voluptatem fugit iure dolorem earum praesentium enim iste veritatis corporis beatae. Eum dolorem fuga blanditiis tempore nostrum omnis, recusandae delectus doloribus tenetur animi magnam adipisci modi distinctio error&amp;nbsp;facilis.&lt;/p&gt;
-
-&lt;p&gt;Praesentium unde veritatis quidem rem totam molestias, odit repellendus neque necessitatibus placeat omnis amet explicabo dolor quod autem nobis? Quis magnam corporis molestias voluptate ullam numquam ducimus nam, doloribus accusamus error eius aliquid dolorem alias quas odit eum. Temporibus ullam exercitationem saepe enim perspiciatis at corporis possimus quidem, possimus sit consequuntur ad nobis minima dolores accusamus mollitia, facere iure odio quibusdam a aut sunt, rerum non impedit? Libero in inventore veritatis reprehenderit veniam ut culpa rerum porro quos sequi, velit ex inventore nam eligendi repellat veniam repellendus beatae saepe perferendis quisquam, id consequuntur sed asperiores impedit maxime eos&amp;nbsp;nisi?&lt;/p&gt;
-
-
-   </content></entry><entry><title>Introducing Hyde</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2009/introducing-hyde.html"/><updated>2000-01-01T00:00:00Z</updated><published>2009-01-20T22:07:29Z</published><id>http://eaddrinu.se/blog/2009/introducing-hyde.html</id><content type="html">
-       
-&lt;!-- Hyde::Excerpt::Begin --&gt;
-
-&lt;h3&gt;vitae ullam iusto voluptates omnis sint nostrum ab hic&amp;nbsp;quod&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Vel culpa voluptates consequuntur obcaecati doloribus perspiciatis beatae iusto dolorem, repellendus quasi unde, voluptatibus tempore nam eum libero quibusdam mollitia distinctio&amp;nbsp;reprehenderit?&lt;/p&gt;
-
-&lt;p&gt;Quasi quidem soluta libero odit deleniti vel, fugit beatae voluptate aliquid alias iste vel id quod, odio nostrum quibusdam autem repudiandae distinctio optio. Doloremque vel harum fugit quasi magnam distinctio aut minima quam dignissimos adipisci, modi deserunt ipsum minus a cum blanditiis voluptate quaerat ducimus vero, temporibus iure officia possimus ad recusandae et quo? Commodi quas aspernatur quo deleniti minima veritatis ab ad aperiam neque, repudiandae distinctio natus nihil, harum labore sequi aperiam pariatur quae, facere rerum alias praesentium voluptatem minus incidunt hic ipsam. Explicabo quos fuga ad ea, dolores dolore non ab qui laborum, assumenda a voluptate ex culpa libero dicta cumque impedit ratione dolor, nesciunt iure ullam ipsam officia tempora atque non distinctio repellat eveniet, veniam odit corrupti commodi repudiandae optio&amp;nbsp;maiores.&lt;/p&gt;
-
-&lt;!-- Hyde::Excerpt::End --&gt;
-
-&lt;h3&gt;ullam neque facilis similique&amp;nbsp;reprehenderit&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Possimus quod qui atque temporibus velit facere molestias culpa perferendis neque aspernatur, magni facilis rem facere non voluptatum illo eveniet fugit maxime. In quas accusamus nostrum sint, asperiores ab laudantium similique neque tempore assumenda porro possimus aliquid molestiae nobis. Qui animi ullam perferendis in asperiores minima ex harum fugiat exercitationem blanditiis, labore non enim repudiandae eveniet quae beatae aperiam facilis ipsum&amp;nbsp;earum.&lt;/p&gt;
-
-&lt;h3&gt;ullam&amp;nbsp;deleniti&lt;/h3&gt;
-&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est&amp;nbsp;laborum.&lt;/p&gt;
-
-&lt;p&gt;Alias illum architecto itaque, doloribus quam id, fugit dolores iure, blanditiis maxime&amp;nbsp;excepturi.&lt;/p&gt;
-
-&lt;p&gt;Adipisci fugit libero, ex sit expedita accusamus fugiat rerum delectus nemo amet, autem provident cumque dicta officia doloremque saepe molestiae. Modi repellat debitis blanditiis consequuntur doloribus saepe eum iusto natus asperiores, soluta optio eaque blanditiis tempore eum, unde hic eveniet cupiditate cum eos laboriosam illum tempore, eveniet unde dolorem sed doloremque dolor animi distinctio necessitatibus ratione ea quis? Sit odit perferendis numquam id aut voluptas minus, neque provident placeat quo nam fugit repellat delectus sit&amp;nbsp;dolor?&lt;/p&gt;
 
 
    </content></entry></feed>
