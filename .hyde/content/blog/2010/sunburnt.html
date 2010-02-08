@@ -1,0 +1,187 @@
+{% extends "_post.html" %}
+{%hyde
+    title: Talking to Solr from Python
+    created: 2010-02-04 11:09:00
+%}
+
+{% block article %}
+{% article %}
+{% asciidoc %}
+
+I http://blog.timetric.com/2010/02/sunburnt-a-python-solr-interface/[recently had cause] to spend lots of time playing around with talking
+to http://lucene.apache.org/solr/[Solr] from Python, and ended up
+writing my own interface code,
+http://github.com/tow/sunburnt/[Sunburnt]. Of course, there are several python/solr libraries already available &mdash;
+even a brief survey shows:
+
+* http://code.google.com/p/pysolr/[pysolr]
+* http://bitbucket.org/cogtree/python-solr/overview/[python-solr] (which is a slightly enhanced version of pysolr)
+* http://pypi.python.org/pypi/solrpy/[solrpy]
+
+and on a separate level,
+
+* http://haystacksearch.org/[haystack] which seems to be becoming the
+  standard Django solution for search backends. (It supports other
+  backends as well as solr, but when using solr it relies on pysolr for communication with the search engine)
+
+It's reasonable to ask why I didn't just use one of them.
+The role of the interface I wanted was basically
+
+1. to present solr updates/queries in a Pythonic fashion. I shouldn't
+have to read the Solr docs to use most of the API. Where I need to
+understand the API to make use of it, I should be able to do so
+Pythonically, rather than mucking about with Solr/Lucene syntax,
+string construction, and multiple layers of special-character escaping.
++
+(and for "I", read "anyone else touching the code, including me several months from now")
+
+2. to stop me (or whoever else touches this code) from making stupid
+mistakes. If I try to do something stupid, it should shout and tell me
+what I did wrong.
+
+None of the existing libraries really fulfil these criteria.
+
+Python-only libraries
+~~~~~~~~~~~~~~~~~~~~~
+
+* pysolr/python-solr
+
+pysolr and python-solr are fairly low-level. One of the very nice things
+about Solr is that its API can be entirely driven over HTTP; if you know the
+Solr API fairly well, it's quite easy to index and query a Solr instance
+from curl or, for that matter, through http://code.google.com/p/httplib2/[httplib2].
+
+For many lightweight uses, that would be a perfectly sensible
+approach &mdash; I suspect it's one a number of people use, though it
+requires you to learn the Solr API, and Lucene query syntax.
+
+However, most of what pysolr/python-solr do is simply to abstract over
+that HTTP layer (which is the easy bit, especially for anyone else
+reading your code) while not really helping you
+with the Solr/Lucene API (which is not). They don't offer you
+much help in extracting your results from Solr's responses, and nor
+do they know how to deal correctly with datetime objects.
+
+NOTE: I was also slightly alarmed by the http://code.google.com/p/pysolr/source/browse/trunk/pysolr.py#297[`eval()` of raw data coming from Solr]
+
+* solrpy
+
+solrpy is provided by the Solr project itself, and seems to be fairly
+well written. It manages to abstract away most of the Lucene query
+syntax, but still requires a reasonable familiarity with the Solr API,
+though, especially for any queries beyond the very basic.
+
+[NOTE]
+.Datatype checking/coercion
+============================================
+None of these support any form of datatype checking; that is, if I try
+to push a document with numeric fields where text fields are expected,
+they'll carry on regardless and choke on the resulting Solr
+error. Similarly, if I specify, for example, a numerical range search
+on a textual field.
+===========================================
+
+Django libraries
+~~~~~~~~~~~~~~~~
+
+Or library (singular), in fact.
+
+* haystack
+
+One of Haystack's biggest advantages is that it's closely tied to the Django world. If you're writing a Django project, and you need search functionality, Haystack probably should be your first port of call.
+
+It has a very nice interface for marking up your Django models indicating which fields should be searchable, and how; it has an API that will be very familiar to anyone who's used the Django ORM API.
+
+However, as a result, it's very strongly tied to Django's models as
+the data store. Indeed, the http://haystacksearch.org/docs/faq.html#when-should-i-not-be-using-haystack[Haystack FAQ itself says]:
+
+[quote, Haystack FAQ]
+____________________________________________________________________
+When should I not be using Haystack?
+
+Non-Model-based data. If you just want to index random data (flat files, alternate sources, etc.), Haystack isn't a good solution. Haystack is very Model-based and doesn't work well outside of that use case.
+____________________________________________________________________
+
+So for any non-Django projects &mdash; or even for any Django projects which
+need to worry about data stored outside the ORM (which is true of
+Timetric -
+http://blog.timetric.com/2009/05/upgrading-the-timetric-backend/[all
+the timeseries data is stored on Tokyo Tyrant]), Haystack is a bit of
+a non-starter.
+
+For that matter, if you're starting a new Python project to talk to an
+existing Solr instance, then it might be too much overhead to place the
+whole thing within a Django framework, and come up with placeholder
+Django db models.
+
+
+Schema-driven versus schema-generating
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Much like RDBMS systems, search engines need a schema. Search engines
+work on "documents", which are collections of fields, and the search
+engine needs to know what to do with these fields &mdash; how to index them,
+how to preprocess/tokenize before indexing, perhaps how to construct
+searchable derived fields.
+ 
+Part of the role of a search engine interface is to map between the
+entities the search engine knows about (documents) and the entities
+the programming language knows about (Python/Django objects, in this
+case). This is much like the mapping that an ORM maintains.
+
+In the case of Solr, you need to know that sometimes when Solr returns
+you the string "2009-01-01" it's simply a string, but sometimes it's a
+date. The only way to tell is to be aware of the schema.
+
+In generating this mapping for an RDBMS there are effectively two approaches:
+
+* they can be schema-generating (like Django's ORM). That is, you need
+  never care about the details of the underlying schema, you just
+  provide templates for objects, and the mapping is done for you.
+
+* they can be schema-driven (like
+  https://storm.canonical.com[Storm]). That is, the database schema is
+  constructed ab initio, and then somehow a mapping is provided  from
+  the tables defined in the schema to objects in the OO language.
+
+Django (until recently) has entirely been schema-generating (see the
+http://docs.djangoproject.com/en/1.1/howto/legacy-databases/#auto-generate-the-models[inspectdb]
+command for how to work otherwise), and Haystack adopts this approach
+too. It's perfectly reasonable for many use-cases, and is one less
+thing for an application author to think about.
+
+However, if you want to generate the schema yourself for any reason,
+then it's difficult to retrofit an existing schema into a
+schema-generating ORM. There's a (biased) overview from the author of
+Storm http://blogs.gnome.org/jamesh/2007/09/28/orm-schema-generation/[in one of his blog posts].
+
+Fortunately, search engine schemata are a great deal simpler than
+RDBMS schemata, at least where object mapping is concerned. There's no
+joins (inter-object-linkage) to worry about; only a mapping from
+documents to objects which are little more than dictionaries of typed
+attributes. This means that it's easy, given a hand-crafted schema, to
+generate the resulting mapping, and apply proper type-checking
+throughout the interface. 
+
+None of the libraries above, however, have any features in this
+direction. Only Haystack pays any attention to the schema at all, and
+it is explicitly schema-generating (though it lets you make a wide
+variety of tweaks to the schema while generating it.
+
+Sunburnt
+~~~~~~~~
+
+So the missing parts of my initial criteria boil down to:
+
+1. lack of a high-level API for arbitrary Python objects
+2. lack of a meaningful object/schema mapper. 
+
+Fixing those issues is http://github.com/tow/sunburnt/[Sunburnt]'s
+_raison d'être_ &mdash; it provides both. The code is http://sam.zoy.org/wtfpl/[freely reusable],
+so if anyone else finds this sort of API useful, then dive in.
+
+{% endasciidoc %}
+
+{% endarticle %}
+
+{% endblock %}

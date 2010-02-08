@@ -1,0 +1,306 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>EADDRINUSE : Talking to Solr from Python </title>
+    <meta name="author" content="Toby White" />
+    <meta name="description" content="Toby White" />
+    
+    <link rel="stylesheet" href="/media/css/blueprint/screen.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/media/css/blueprint/print.css" type="text/css" media="print">
+    <!--[if IE]><link rel="stylesheet" href="/media/css/blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+    <link rel="stylesheet" href="/media/css/pygments.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/media/css/base.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/media/css/eaddrinuse.css" type="text/css" media="screen, projection">
+    
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js"></script>
+    
+
+    <link rel="openid.server" href="http://uszla.me.uk/id">
+    <link rel="openid.delegate" href="http://uszla.me.uk/id">
+  </head>
+  <body>
+    <div class="container">
+      <div id="header" class="span-24 last">
+        <center>
+          <img src="/media/imgs/EADDRINUSE.png" width="600" alt="EADDRINUSE" />
+        </center>
+      </div>
+      <div id="content" class="span-24 last">
+        
+
+<ul class="breadcrumbs">
+
+    <li>
+        <a href="/index.html">Eaddrinuse</a>
+        
+        <span class="separator">&gt;</span>
+    </li>
+
+    <li>
+        <a href="/blog/blog.html">Blog</a>
+        
+        <span class="separator">&gt;</span>
+    </li>
+
+    <li>
+        <a href="/blog/2010/2010.html">2010</a>
+        
+    </li>
+
+</ul>
+    
+
+
+
+<div id="sitenav">
+    <ul>
+        <li>
+            <a href="/index.html">Home</a>
+        </li>    
+        
+        <li>
+            <a href="/about/about.html">
+                About
+            </a>
+        </li>
+        
+        <li class="selected" >
+            <a href="/blog/blog.html">
+                Blog
+            </a>
+        </li>
+        
+        <hr />
+    </ul>
+</div>
+
+
+<div id="content-header">
+    <h1>Talking to Solr from Python</h1>
+    <span class="post-date">Thu 04 Feb 2010</span>
+</div>
+
+
+<div id="post-content">
+
+
+<!-- Hyde::Article::Begin -->
+
+<p>I <a href="http://blog.timetric.com/2010/02/sunburnt-a-python-solr-interface/">recently had cause</a> to spend lots of time playing around with talking
+to <a href="http://lucene.apache.org/solr/">Solr</a> from Python, and ended up
+writing my own interface code,
+<a href="http://github.com/tow/sunburnt/">Sunburnt</a>. Of course, there are several python/solr libraries already available &mdash;
+even a brief survey&nbsp;shows:</p>
+<ul>
+<li>
+<p>
+<a href="http://code.google.com/p/pysolr/">pysolr</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://bitbucket.org/cogtree/python-solr/overview/">python-solr</a> (which is a slightly enhanced version of&nbsp;pysolr)
+</p>
+</li>
+<li>
+<p>
+<a href="http://pypi.python.org/pypi/solrpy/">solrpy</a>
+</p>
+</li>
+</ul>
+<p>and on a separate&nbsp;level,</p>
+<ul>
+<li>
+<p>
+<a href="http://haystacksearch.org/">haystack</a> which seems to be becoming the
+  standard Django solution for search backends. (It supports other
+  backends as well as solr, but when using solr it relies on pysolr for communication with the search&nbsp;engine)
+</p>
+</li>
+</ul>
+<p>It&#8217;s reasonable to ask why I didn&#8217;t just use one of them.
+The role of the interface I wanted was&nbsp;basically</p>
+<ol type="1">
+<li>
+<p>
+to present solr updates/queries in a Pythonic fashion. I shouldn&#8217;t
+have to read the Solr docs to use most of the <span class="caps">API</span>. Where I need to
+understand the <span class="caps">API</span> to make use of it, I should be able to do so
+Pythonically, rather than mucking about with Solr/Lucene syntax,
+string construction, and multiple layers of special-character&nbsp;escaping.
+</p>
+<p>(and for &#8220;I&#8221;, read &#8220;anyone else touching the code, including me several months from&nbsp;now&#8221;)</p>
+</li>
+<li>
+<p>
+to stop me (or whoever else touches this code) from making stupid
+mistakes. If I try to do something stupid, it should shout and tell me
+what I did&nbsp;wrong.
+</p>
+</li>
+</ol>
+<p>None of the existing libraries really fulfil these&nbsp;criteria.</p>
+<h3><a name="_python_only_libraries"></a>Python-only&nbsp;libraries</h3>
+<ul>
+<li>
+<p>
+pysolr/python-solr
+</p>
+</li>
+</ul>
+<p>pysolr and python-solr are fairly low-level. One of the very nice things
+about Solr is that its <span class="caps">API</span> can be entirely driven over <span class="caps">HTTP</span>; if you know the
+Solr <span class="caps">API</span> fairly well, it&#8217;s quite easy to index and query a Solr instance
+from curl or, for that matter, through <a href="http://code.google.com/p/httplib2/">httplib2</a>.</p>
+<p>For many lightweight uses, that would be a perfectly sensible
+approach &mdash; I suspect it&#8217;s one a number of people use, though it
+requires you to learn the Solr <span class="caps">API</span>, and Lucene query&nbsp;syntax.</p>
+<p>However, most of what pysolr/python-solr do is simply to abstract over
+that <span class="caps">HTTP</span> layer (which is the easy bit, especially for anyone else
+reading your code) while not really helping you
+with the Solr/Lucene <span class="caps">API</span> (which is not). They don&#8217;t offer you
+much help in extracting your results from Solr&#8217;s responses, and nor
+do they know how to deal correctly with datetime&nbsp;objects.</p>
+<table frame="void" cellpadding="8">
+<tr valign="top"><td><p><b><u>Note</u></b></p></td>
+<td style="border-left: 1px solid silver;">I was also slightly alarmed by the <a href="http://code.google.com/p/pysolr/source/browse/trunk/pysolr.py#297"><tt>eval()</tt> of raw data coming from Solr</a></td></tr></table>
+<ul>
+<li>
+<p>
+solrpy
+</p>
+</li>
+</ul>
+<p>solrpy is provided by the Solr project itself, and seems to be fairly
+well written. It manages to abstract away most of the Lucene query
+syntax, but still requires a reasonable familiarity with the Solr <span class="caps">API</span>,
+though, especially for any queries beyond the very&nbsp;basic.</p>
+<table frame="void" cellpadding="8">
+<tr valign="top"><td><p><b><u>Note</u></b></p></td>
+<td style="border-left: 1px solid silver;">
+<p><b>Datatype&nbsp;checking/coercion</b></p>
+<p>None of these support any form of datatype checking; that is, if I try
+to push a document with numeric fields where text fields are expected,
+they&#8217;ll carry on regardless and choke on the resulting Solr
+error. Similarly, if I specify, for example, a numerical range search
+on a textual&nbsp;field.</p>
+</td></tr></table>
+<h3><a name="_django_libraries"></a>Django&nbsp;libraries</h3>
+<p>Or library (singular), in&nbsp;fact.</p>
+<ul>
+<li>
+<p>
+haystack
+</p>
+</li>
+</ul>
+<p>One of Haystack&#8217;s biggest advantages is that it&#8217;s closely tied to the Django world. If you&#8217;re writing a Django project, and you need search functionality, Haystack probably should be your first port of&nbsp;call.</p>
+<p>It has a very nice interface for marking up your Django models indicating which fields should be searchable, and how; it has an <span class="caps">API</span> that will be very familiar to anyone who&#8217;s used the Django <span class="caps">ORM</span>&nbsp;<span class="caps">API</span>.</p>
+<p>However, as a result, it&#8217;s very strongly tied to Django&#8217;s models as
+the data store. Indeed, the <a href="http://haystacksearch.org/docs/faq.html#when-should-i-not-be-using-haystack">Haystack <span class="caps">FAQ</span> itself says</a>:</p>
+<blockquote>
+<p>When should I not be using&nbsp;Haystack?</p>
+<p>Non-Model-based data. If you just want to index random data (flat files, alternate sources, etc.), Haystack isn&#8217;t a good solution. Haystack is very Model-based and doesn&#8217;t work well outside of that use&nbsp;case.</p>
+<p align="right">
+&#8212; Haystack&nbsp;<span class="caps">FAQ</span>
+</p>
+</blockquote>
+<p>So for any non-Django projects &mdash; or even for any Django projects which
+need to worry about data stored outside the <span class="caps">ORM</span> (which is true of
+Timetric -
+<a href="http://blog.timetric.com/2009/05/upgrading-the-timetric-backend/">all
+the timeseries data is stored on Tokyo Tyrant</a>), Haystack is a bit of
+a&nbsp;non-starter.</p>
+<p>For that matter, if you&#8217;re starting a new Python project to talk to an
+existing Solr instance, then it might be too much overhead to place the
+whole thing within a Django framework, and come up with placeholder
+Django db&nbsp;models.</p>
+<h3><a name="_schema_driven_versus_schema_generating"></a>Schema-driven versus&nbsp;schema-generating</h3>
+<p>Much like <span class="caps">RDBMS</span> systems, search engines need a schema. Search engines
+work on &#8220;documents&#8221;, which are collections of fields, and the search
+engine needs to know what to do with these fields &mdash; how to index them,
+how to preprocess/tokenize before indexing, perhaps how to construct
+searchable derived&nbsp;fields.</p>
+<p>Part of the role of a search engine interface is to map between the
+entities the search engine knows about (documents) and the entities
+the programming language knows about (Python/Django objects, in this
+case). This is much like the mapping that an <span class="caps">ORM</span>&nbsp;maintains.</p>
+<p>In the case of Solr, you need to know that sometimes when Solr returns
+you the string &#8220;2009-01-01&#8221; it&#8217;s simply a string, but sometimes it&#8217;s a
+date. The only way to tell is to be aware of the&nbsp;schema.</p>
+<p>In generating this mapping for an <span class="caps">RDBMS</span> there are effectively two&nbsp;approaches:</p>
+<ul>
+<li>
+<p>
+they can be schema-generating (like Django&#8217;s <span class="caps">ORM</span>). That is, you need
+  never care about the details of the underlying schema, you just
+  provide templates for objects, and the mapping is done for&nbsp;you.
+</p>
+</li>
+<li>
+<p>
+they can be schema-driven (like
+  <a href="https://storm.canonical.com">Storm</a>). That is, the database schema is
+  constructed ab initio, and then somehow a mapping is provided  from
+  the tables defined in the schema to objects in the <span class="caps">OO</span>&nbsp;language.
+</p>
+</li>
+</ul>
+<p>Django (until recently) has entirely been schema-generating (see the
+<a href="http://docs.djangoproject.com/en/1.1/howto/legacy-databases/#auto-generate-the-models">inspectdb</a>
+command for how to work otherwise), and Haystack adopts this approach
+too. It&#8217;s perfectly reasonable for many use-cases, and is one less
+thing for an application author to think&nbsp;about.</p>
+<p>However, if you want to generate the schema yourself for any reason,
+then it&#8217;s difficult to retrofit an existing schema into a
+schema-generating <span class="caps">ORM</span>. There&#8217;s a (biased) overview from the author of
+Storm <a href="http://blogs.gnome.org/jamesh/2007/09/28/orm-schema-generation/">in one of his blog posts</a>.</p>
+<p>Fortunately, search engine schemata are a great deal simpler than
+<span class="caps">RDBMS</span> schemata, at least where object mapping is concerned. There&#8217;s no
+joins (inter-object-linkage) to worry about; only a mapping from
+documents to objects which are little more than dictionaries of typed
+attributes. This means that it&#8217;s easy, given a hand-crafted schema, to
+generate the resulting mapping, and apply proper type-checking
+throughout the&nbsp;interface.</p>
+<p>None of the libraries above, however, have any features in this
+direction. Only Haystack pays any attention to the schema at all, and
+it is explicitly schema-generating (though it lets you make a wide
+variety of tweaks to the schema while generating&nbsp;it.</p>
+<h3><a name="_sunburnt"></a>Sunburnt</h3>
+<p>So the missing parts of my initial criteria boil down&nbsp;to:</p>
+<ol type="1">
+<li>
+<p>
+lack of a high-level <span class="caps">API</span> for arbitrary Python&nbsp;objects
+</p>
+</li>
+<li>
+<p>
+lack of a meaningful object/schema&nbsp;mapper.
+</p>
+</li>
+</ol>
+<p>Fixing those issues is <a href="http://github.com/tow/sunburnt/">Sunburnt</a>&#8216;s
+<em>raison d&#8217;être</em> &mdash; it provides both. The code is <a href="http://sam.zoy.org/wtfpl/">freely reusable</a>,
+so if anyone else finds this sort of <span class="caps">API</span> useful, then dive&nbsp;in.</p>
+
+
+<!-- Hyde::Article::End -->
+
+
+
+</div>
+
+      </div>
+      <hr />
+      <div>
+        Toby White<br />
+        toby@timetric.com<br />
+        <a href="http://twitter.com/tow21/">@tow21</a><br />
+      </div>
+    </div>
+  </body>
+</html>

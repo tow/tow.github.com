@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>EADDRINUSE blog</title><link href="http://eaddrinu.se/blog/atom.xml" rel="self"/><link href="http://eaddrinu.se"/><updated>2009-12-12T00:20:19Z</updated><id>http://eaddrinu.se</id><entry><title>Postfix on Leopard.</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2009/setting-up-postfix.html"/><updated>2000-01-01T00:00:00Z</updated><published>2009-11-24T23:03:37Z</published><id>http://eaddrinu.se/blog/2009/setting-up-postfix.html</id><content type="html">
+<feed xmlns="http://www.w3.org/2005/Atom"><title>EADDRINUSE blog</title><link href="http://eaddrinu.se/blog/atom.xml" rel="self"/><link href="http://eaddrinu.se"/><updated>2010-02-08T17:06:56Z</updated><id>http://eaddrinu.se</id><entry><title>Postfix on Leopard.</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2009/setting-up-postfix.html"/><updated>2000-01-01T00:00:00Z</updated><published>2009-11-24T23:03:37Z</published><id>http://eaddrinu.se/blog/2009/setting-up-postfix.html</id><content type="html">
        
 &lt;p&gt;I recently re-installed Leopard on my shiny new MacBook Pro. I use it primarily for development, and at least one of the projects I&amp;#8217;m developing needs to send mail. So I wanted to get postfix&amp;nbsp;working.&lt;/p&gt;
 &lt;p&gt;&lt;span class=&quot;dquo&quot;&gt;&amp;#8220;&lt;/span&gt;Working&amp;#8221; means accepting mail from localhost, and sending mail via an &lt;span class=&quot;caps&quot;&gt;SMTP&lt;/span&gt; server somewhere. The most obviously accessible &lt;span class=&quot;caps&quot;&gt;SMTP&lt;/span&gt; server is gmail, of&amp;nbsp;course.&lt;/p&gt;
@@ -24,6 +24,208 @@
 &lt;span class=&quot;s2&quot;&gt;launchctl load /System/Library/LaunchDaemons/org.postfix.master.plist&lt;/span&gt;
 &lt;span class=&quot;s2&quot;&gt;&amp;quot;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
+
+
+
+   </content></entry><entry><title>Talking to Solr from Python</title><author><name>Toby White</name></author><link href="http://eaddrinu.se/blog/2010/sunburnt.html"/><updated>2000-01-01T00:00:00Z</updated><published>2010-02-04T11:09:00Z</published><id>http://eaddrinu.se/blog/2010/sunburnt.html</id><content type="html">
+       
+&lt;p&gt;I &lt;a href=&quot;http://blog.timetric.com/2010/02/sunburnt-a-python-solr-interface/&quot;&gt;recently had cause&lt;/a&gt; to spend lots of time playing around with talking
+to &lt;a href=&quot;http://lucene.apache.org/solr/&quot;&gt;Solr&lt;/a&gt; from Python, and ended up
+writing my own interface code,
+&lt;a href=&quot;http://github.com/tow/sunburnt/&quot;&gt;Sunburnt&lt;/a&gt;. Of course, there are several python/solr libraries already available &amp;mdash;
+even a brief survey&amp;nbsp;shows:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+&lt;a href=&quot;http://code.google.com/p/pysolr/&quot;&gt;pysolr&lt;/a&gt;
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;
+&lt;a href=&quot;http://bitbucket.org/cogtree/python-solr/overview/&quot;&gt;python-solr&lt;/a&gt; (which is a slightly enhanced version of&amp;nbsp;pysolr)
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;
+&lt;a href=&quot;http://pypi.python.org/pypi/solrpy/&quot;&gt;solrpy&lt;/a&gt;
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;and on a separate&amp;nbsp;level,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+&lt;a href=&quot;http://haystacksearch.org/&quot;&gt;haystack&lt;/a&gt; which seems to be becoming the
+  standard Django solution for search backends. (It supports other
+  backends as well as solr, but when using solr it relies on pysolr for communication with the search&amp;nbsp;engine)
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;It&amp;#8217;s reasonable to ask why I didn&amp;#8217;t just use one of them.
+The role of the interface I wanted was&amp;nbsp;basically&lt;/p&gt;
+&lt;ol type=&quot;1&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;
+to present solr updates/queries in a Pythonic fashion. I shouldn&amp;#8217;t
+have to read the Solr docs to use most of the &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt;. Where I need to
+understand the &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; to make use of it, I should be able to do so
+Pythonically, rather than mucking about with Solr/Lucene syntax,
+string construction, and multiple layers of special-character&amp;nbsp;escaping.
+&lt;/p&gt;
+&lt;p&gt;(and for &amp;#8220;I&amp;#8221;, read &amp;#8220;anyone else touching the code, including me several months from&amp;nbsp;now&amp;#8221;)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;
+to stop me (or whoever else touches this code) from making stupid
+mistakes. If I try to do something stupid, it should shout and tell me
+what I did&amp;nbsp;wrong.
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;None of the existing libraries really fulfil these&amp;nbsp;criteria.&lt;/p&gt;
+&lt;h3&gt;&lt;a name=&quot;_python_only_libraries&quot;&gt;&lt;/a&gt;Python-only&amp;nbsp;libraries&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+pysolr/python-solr
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;pysolr and python-solr are fairly low-level. One of the very nice things
+about Solr is that its &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; can be entirely driven over &lt;span class=&quot;caps&quot;&gt;HTTP&lt;/span&gt;; if you know the
+Solr &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; fairly well, it&amp;#8217;s quite easy to index and query a Solr instance
+from curl or, for that matter, through &lt;a href=&quot;http://code.google.com/p/httplib2/&quot;&gt;httplib2&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For many lightweight uses, that would be a perfectly sensible
+approach &amp;mdash; I suspect it&amp;#8217;s one a number of people use, though it
+requires you to learn the Solr &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt;, and Lucene query&amp;nbsp;syntax.&lt;/p&gt;
+&lt;p&gt;However, most of what pysolr/python-solr do is simply to abstract over
+that &lt;span class=&quot;caps&quot;&gt;HTTP&lt;/span&gt; layer (which is the easy bit, especially for anyone else
+reading your code) while not really helping you
+with the Solr/Lucene &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; (which is not). They don&amp;#8217;t offer you
+much help in extracting your results from Solr&amp;#8217;s responses, and nor
+do they know how to deal correctly with datetime&amp;nbsp;objects.&lt;/p&gt;
+&lt;table frame=&quot;void&quot; cellpadding=&quot;8&quot;&gt;
+&lt;tr valign=&quot;top&quot;&gt;&lt;td&gt;&lt;p&gt;&lt;b&gt;&lt;u&gt;Note&lt;/u&gt;&lt;/b&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;border-left: 1px solid silver;&quot;&gt;I was also slightly alarmed by the &lt;a href=&quot;http://code.google.com/p/pysolr/source/browse/trunk/pysolr.py#297&quot;&gt;&lt;tt&gt;eval()&lt;/tt&gt; of raw data coming from Solr&lt;/a&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+solrpy
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;solrpy is provided by the Solr project itself, and seems to be fairly
+well written. It manages to abstract away most of the Lucene query
+syntax, but still requires a reasonable familiarity with the Solr &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt;,
+though, especially for any queries beyond the very&amp;nbsp;basic.&lt;/p&gt;
+&lt;table frame=&quot;void&quot; cellpadding=&quot;8&quot;&gt;
+&lt;tr valign=&quot;top&quot;&gt;&lt;td&gt;&lt;p&gt;&lt;b&gt;&lt;u&gt;Note&lt;/u&gt;&lt;/b&gt;&lt;/p&gt;&lt;/td&gt;
+&lt;td style=&quot;border-left: 1px solid silver;&quot;&gt;
+&lt;p&gt;&lt;b&gt;Datatype&amp;nbsp;checking/coercion&lt;/b&gt;&lt;/p&gt;
+&lt;p&gt;None of these support any form of datatype checking; that is, if I try
+to push a document with numeric fields where text fields are expected,
+they&amp;#8217;ll carry on regardless and choke on the resulting Solr
+error. Similarly, if I specify, for example, a numerical range search
+on a textual&amp;nbsp;field.&lt;/p&gt;
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;h3&gt;&lt;a name=&quot;_django_libraries&quot;&gt;&lt;/a&gt;Django&amp;nbsp;libraries&lt;/h3&gt;
+&lt;p&gt;Or library (singular), in&amp;nbsp;fact.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+haystack
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;One of Haystack&amp;#8217;s biggest advantages is that it&amp;#8217;s closely tied to the Django world. If you&amp;#8217;re writing a Django project, and you need search functionality, Haystack probably should be your first port of&amp;nbsp;call.&lt;/p&gt;
+&lt;p&gt;It has a very nice interface for marking up your Django models indicating which fields should be searchable, and how; it has an &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; that will be very familiar to anyone who&amp;#8217;s used the Django &lt;span class=&quot;caps&quot;&gt;ORM&lt;/span&gt;&amp;nbsp;&lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt;.&lt;/p&gt;
+&lt;p&gt;However, as a result, it&amp;#8217;s very strongly tied to Django&amp;#8217;s models as
+the data store. Indeed, the &lt;a href=&quot;http://haystacksearch.org/docs/faq.html#when-should-i-not-be-using-haystack&quot;&gt;Haystack &lt;span class=&quot;caps&quot;&gt;FAQ&lt;/span&gt; itself says&lt;/a&gt;:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;When should I not be using&amp;nbsp;Haystack?&lt;/p&gt;
+&lt;p&gt;Non-Model-based data. If you just want to index random data (flat files, alternate sources, etc.), Haystack isn&amp;#8217;t a good solution. Haystack is very Model-based and doesn&amp;#8217;t work well outside of that use&amp;nbsp;case.&lt;/p&gt;
+&lt;p align=&quot;right&quot;&gt;
+&amp;#8212; Haystack&amp;nbsp;&lt;span class=&quot;caps&quot;&gt;FAQ&lt;/span&gt;
+&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So for any non-Django projects &amp;mdash; or even for any Django projects which
+need to worry about data stored outside the &lt;span class=&quot;caps&quot;&gt;ORM&lt;/span&gt; (which is true of
+Timetric -
+&lt;a href=&quot;http://blog.timetric.com/2009/05/upgrading-the-timetric-backend/&quot;&gt;all
+the timeseries data is stored on Tokyo Tyrant&lt;/a&gt;), Haystack is a bit of
+a&amp;nbsp;non-starter.&lt;/p&gt;
+&lt;p&gt;For that matter, if you&amp;#8217;re starting a new Python project to talk to an
+existing Solr instance, then it might be too much overhead to place the
+whole thing within a Django framework, and come up with placeholder
+Django db&amp;nbsp;models.&lt;/p&gt;
+&lt;h3&gt;&lt;a name=&quot;_schema_driven_versus_schema_generating&quot;&gt;&lt;/a&gt;Schema-driven versus&amp;nbsp;schema-generating&lt;/h3&gt;
+&lt;p&gt;Much like &lt;span class=&quot;caps&quot;&gt;RDBMS&lt;/span&gt; systems, search engines need a schema. Search engines
+work on &amp;#8220;documents&amp;#8221;, which are collections of fields, and the search
+engine needs to know what to do with these fields &amp;mdash; how to index them,
+how to preprocess/tokenize before indexing, perhaps how to construct
+searchable derived&amp;nbsp;fields.&lt;/p&gt;
+&lt;p&gt;Part of the role of a search engine interface is to map between the
+entities the search engine knows about (documents) and the entities
+the programming language knows about (Python/Django objects, in this
+case). This is much like the mapping that an &lt;span class=&quot;caps&quot;&gt;ORM&lt;/span&gt;&amp;nbsp;maintains.&lt;/p&gt;
+&lt;p&gt;In the case of Solr, you need to know that sometimes when Solr returns
+you the string &amp;#8220;2009-01-01&amp;#8221; it&amp;#8217;s simply a string, but sometimes it&amp;#8217;s a
+date. The only way to tell is to be aware of the&amp;nbsp;schema.&lt;/p&gt;
+&lt;p&gt;In generating this mapping for an &lt;span class=&quot;caps&quot;&gt;RDBMS&lt;/span&gt; there are effectively two&amp;nbsp;approaches:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;
+they can be schema-generating (like Django&amp;#8217;s &lt;span class=&quot;caps&quot;&gt;ORM&lt;/span&gt;). That is, you need
+  never care about the details of the underlying schema, you just
+  provide templates for objects, and the mapping is done for&amp;nbsp;you.
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;
+they can be schema-driven (like
+  &lt;a href=&quot;https://storm.canonical.com&quot;&gt;Storm&lt;/a&gt;). That is, the database schema is
+  constructed ab initio, and then somehow a mapping is provided  from
+  the tables defined in the schema to objects in the &lt;span class=&quot;caps&quot;&gt;OO&lt;/span&gt;&amp;nbsp;language.
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Django (until recently) has entirely been schema-generating (see the
+&lt;a href=&quot;http://docs.djangoproject.com/en/1.1/howto/legacy-databases/#auto-generate-the-models&quot;&gt;inspectdb&lt;/a&gt;
+command for how to work otherwise), and Haystack adopts this approach
+too. It&amp;#8217;s perfectly reasonable for many use-cases, and is one less
+thing for an application author to think&amp;nbsp;about.&lt;/p&gt;
+&lt;p&gt;However, if you want to generate the schema yourself for any reason,
+then it&amp;#8217;s difficult to retrofit an existing schema into a
+schema-generating &lt;span class=&quot;caps&quot;&gt;ORM&lt;/span&gt;. There&amp;#8217;s a (biased) overview from the author of
+Storm &lt;a href=&quot;http://blogs.gnome.org/jamesh/2007/09/28/orm-schema-generation/&quot;&gt;in one of his blog posts&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Fortunately, search engine schemata are a great deal simpler than
+&lt;span class=&quot;caps&quot;&gt;RDBMS&lt;/span&gt; schemata, at least where object mapping is concerned. There&amp;#8217;s no
+joins (inter-object-linkage) to worry about; only a mapping from
+documents to objects which are little more than dictionaries of typed
+attributes. This means that it&amp;#8217;s easy, given a hand-crafted schema, to
+generate the resulting mapping, and apply proper type-checking
+throughout the&amp;nbsp;interface.&lt;/p&gt;
+&lt;p&gt;None of the libraries above, however, have any features in this
+direction. Only Haystack pays any attention to the schema at all, and
+it is explicitly schema-generating (though it lets you make a wide
+variety of tweaks to the schema while generating&amp;nbsp;it.&lt;/p&gt;
+&lt;h3&gt;&lt;a name=&quot;_sunburnt&quot;&gt;&lt;/a&gt;Sunburnt&lt;/h3&gt;
+&lt;p&gt;So the missing parts of my initial criteria boil down&amp;nbsp;to:&lt;/p&gt;
+&lt;ol type=&quot;1&quot;&gt;
+&lt;li&gt;
+&lt;p&gt;
+lack of a high-level &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; for arbitrary Python&amp;nbsp;objects
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;
+lack of a meaningful object/schema&amp;nbsp;mapper.
+&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Fixing those issues is &lt;a href=&quot;http://github.com/tow/sunburnt/&quot;&gt;Sunburnt&lt;/a&gt;&amp;#8216;s
+&lt;em&gt;raison d&amp;#8217;être&lt;/em&gt; &amp;mdash; it provides both. The code is &lt;a href=&quot;http://sam.zoy.org/wtfpl/&quot;&gt;freely reusable&lt;/a&gt;,
+so if anyone else finds this sort of &lt;span class=&quot;caps&quot;&gt;API&lt;/span&gt; useful, then dive&amp;nbsp;in.&lt;/p&gt;
 
 
 
